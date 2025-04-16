@@ -1,0 +1,20 @@
+{
+  "files": {
+    "main.py": [
+      {
+        "id": "9b655fc5-3371-499c-a8ce-8193bb1855ff",
+        "line": 378,
+        "version": 5640,
+        "index": 11231
+      }
+    ],
+    "templates/movies_admin.html": [
+      {
+        "id": "b91fb0b6-c662-4806-b333-760a5a39ccd2",
+        "line": 171,
+        "version": 1196,
+        "index": 7177
+      }
+    ]
+  }
+}
