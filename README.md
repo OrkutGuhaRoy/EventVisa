@@ -7,9 +7,9 @@ This project includes several features and optional integrations. Some modules l
 
 **Note:** SMTP email functionality is implemented, but real credentials have been **intentionally removed** from the codebase to prevent misuse.
 
-**Admin Credentials :**
-User : admin
-Password : Admin@123
+** Admin Credentials : **
+        ```User : admin
+        Password : Admin@123```
 ---
 
 ## ✅ Quick Start (Without Email or Celery)
