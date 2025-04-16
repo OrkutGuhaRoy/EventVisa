@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{%block title%} Book Ticket {%endblock%}
+{% block content %}
+
+<div id='check'></div>
+
+
+
+
+<script>
+ 
+  var check = new Vue({
+    el: "#check",
+    delimiters: ["${", "}"],
+    data() {
+      return {
+        token: '', // Initialize the token variable
+        loggedIn: false,
+      };
+    },
+    mounted() {
+      // Fetch the user's name from cookies or session when the component is mounted
+      const cookies = document.cookie.split(';');
+      for (const cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'eventvisa_token') {
+          // Token found, fetch the user's role
+          this.loggedIn= true;
+          this.token=value;
+          fetch('/get_role', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ token: value }),
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.error)
+            {
+              alert (data.error)
+              window.location.href =  "/signin.html";
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+          break;
+        }
+      }
+       if (!this.loggedIn) {
+        alert("Login For Exciting Movies & Offers");
+        window.location.href = "/signin.html"; // Redirect to login page or appropriate URL
+      }
+    },
+  });
+
+</script>
+{%endblock%}

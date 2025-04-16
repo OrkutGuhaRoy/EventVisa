@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{%block title%}Admin Login{%endblock%}
+{% block content %}
+
+  
+
+<div id = check></div>
+
+    <div class="card text-center">
+    <div class="card">
+      <div class="card-body">
+         <img src="https://previews.123rf.com/images/toozdesign/toozdesign1501/toozdesign150100046/35960989-vector-user-icon-backend.jpg" height= "auto" width=75 >
+        <h5 class="card-title">Event Managment System</h5>
+        <a href="movies_admin.html" class="btn btn-primary">Go!</a>
+      </div>
+    </div>
+    </div>
+
+<div class="card text-center">
+    <div class="card">
+        <div class="card-body">
+            <img src="https://surveyjs.io/Content/Images/V2/pdf-generator-page/PDF-Generator-01.png" height="auto" width="75">
+            <h5 class="card-title">Download Booking Report HTML</h5>
+            <form method="POST" action="{{ url_for('generate_booking_report') }}">
+                <button type="submit" class="btn btn-primary">Generate and Download Booking Report</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="app" class="card text-center">
+  <div class="card">
+    <div class="card-body">
+      <img src="https://cdn-icons-png.flaticon.com/512/6133/6133884.png" height="auto" width="75">
+      <h5 class="card-title">Download Theater Details CSV</h5>
+      <form action="/theater_csv" method="post">
+        <label for="theater_id">Select a Theater:</label>
+        <select name="theater_id" v-model="selectedTheater" required>
+          <option v-for="theater in theaters" :value="theater.id">${ theater.name }-${theater.address}</option>
+        </select>
+        <button type="submit" class="btn btn-primary">Download CSV</button>
+      </form>
+      <p v-if="message">${ message }</p>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+
+<script>
+  new Vue({
+    el: '#app',
+    delimiters: ["${", "}"],
+    data: {
+      selectedTheater: '',
+      theaters: [],
+      message: '',
+    },
+    created() {
+      this.fetchTheaters();
+    },
+    methods: {
+      fetchTheaters() {
+        fetch('/get_theaters', { method: 'POST' })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              this.theaters = data.theaters;
+            } else {
+              console.error(data.error);
+            }
+          })
+          .catch(error => {
+            console.error(error);
+          });
+      }
+  }});
+</script>
+
+
+
+
+
+
+
+
+<script>
+ 
+  var check = new Vue({
+    el: "#check",
+    delimiters: ["${", "}"],
+    data() {
+      return {
+        token: '', // Initialize the token variable
+        loggedIn: false,
+      };
+    },
+    mounted() {
+      // Fetch the user's name from cookies or session when the component is mounted
+      const cookies = document.cookie.split(';');
+      for (const cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'eventvisa_token') {
+          // Token found, fetch the user's role
+          this.loggedIn= true;
+          this.token=value;
+          fetch('/get_role', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ token: value }),
+          })
+          .then(response => response.json())
+          .then(data => {
+             if (data.role === "client") {
+              alert("Unauthorized");
+              window.location.href = "/home.html";
+            } 
+            if (data.error)
+            {
+              alert (data.error)
+              window.location.href =  "/admin_login.html";
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+          break;
+        }
+      }
+       if (!this.loggedIn) {
+        alert("Access Denied");
+        window.location.href = "/admin_login.html"; // Redirect to login page or appropriate URL
+      }
+    },
+  });
+</script>
+
+
+
+
+{%endblock%}

@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}User Dashboard{% endblock %}
+{% block content %}
+<div id='check'></div>
+  <div class="container mt-5" id="userDashboard">
+    <!-- Section for displaying user details -->
+    <div>
+      <h2>User Details</h2>
+      <div>
+        <p><strong>Name:</strong> ${ user.user_name }</p>
+        <p><strong>Email:</strong> ${ user.email}</p>
+        <p><strong>Date of Birth:</strong> ${ user.dob }</p>
+        <p><strong>Address:</strong> ${ user.address }</p>
+        <p><strong>Phone:</strong> ${ user.phone }</p>
+      </div>
+    </div>
+  
+    <!-- Section for displaying booking history -->
+    <div>
+      <h2>Booking History</h2>
+      <ul>
+        <li v-for="booking in userBookings" :key="booking.id">
+          <p><strong>Booking ID: </strong> ${ booking[0] }</p>
+          <p><strong>Theater: </strong> ${ booking[1] }</p>
+          <p><strong>Movie Name: </strong> ${ booking[2] }</p>
+          <p><strong>Show Time: </strong>${ booking[3] }</p>
+          <p><strong>VIP Tickets: </strong>${ booking[5] }</p>
+          <p><strong>Elite Tickets: </strong>${ booking[6] }</p>
+          <p><strong>General Tickets: </strong>${ booking[7] }</p>
+          <p><strong>Total Price: </strong>: </strong>${ booking[8] }</p>
+          <p><strong>Booking Date: </strong>: </strong>${ booking[9] }</p>
+          
+          
+        
+          
+          
+          <!-- Add more booking details as needed -->
+        </li>
+      </ul>
+    </div>
+  </div>
+    <!-- Section for downloading tickets -->
+    
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.7.14/dist/vue.js">
+    
+  </script>
+  
+<script>
+    var userDashboard = new Vue({
+      el: "#userDashboard",
+      delimiters: ["${", "}"],
+      data() {
+        return {
+          user: {},
+          userBookings: [],
+          tickets: [],
+          email: '',
+        };
+      },
+      async mounted() {
+        const cookies = document.cookie.split(';');
+        for (const cookie of cookies) {
+          const [name, value] = cookie.trim().split('=');
+          if (name === 'eventvisa_token') {
+            this.token = value;
+            try {
+              const response = await fetch('/get_user_name', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: value }),
+              });
+              const data = await response.json();
+              if (data.success) {
+                this.user = data;
+                this.email = data.email;
+                console.log(this.email);
+
+                const bookingResponse = await fetch("/get_user_bookings", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ email: this.email })
+                });
+                const bookingData = await bookingResponse.json();
+                if (bookingData.success) {
+                  this.userBookings = bookingData.userBookings;
+                }
+              }
+            } catch (error) {
+              console.error('Error fetching user name:', error);
+            }
+            break;
+          }
+        }
+      }
+    });
+  </script>
+
+<script>
+var check = new Vue({
+    el: "#check",
+    delimiters: ["${", "}"],
+    data() {
+      return {
+        token: '',
+        email: '',
+        loggedIn: false,
+      };
+    },
+    mounted() {
+      const cookies = document.cookie.split(';');
+      for (const cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'eventvisa_token') {
+          this.loggedIn = true;
+          this.token = value;
+          fetch('/get_role', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: value }),
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.error) {
+              alert(data.error);
+              window.location.href = "/signin.html";
+            } else {
+              this.email = data.email;
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+          break;
+        }
+      }
+      if (!this.loggedIn) {
+        alert("Access Denied, Please Login");
+        window.location.href = "/signin.html";
+      }
+    },
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Sign Up{% endblock %}
+{% block content %}
+  <br>
+ 
+
+  <div style="color: red;">* denotes mandatory field</div>
+
+  <div id="signup">
+    
+    <div v-if="errorMessage" style="color: red;">${ errorMessage }</div>
+    <div v-if="successMessage" style="color: green;">${ successMessage }</div>
+      
+    <div class="container mt-5">
+      <form class="row g-3" @submit.prevent="submitForm" method="post">
+        <div class="col-md-6">
+          <label class="form-label">Email*</label>
+          <input v-model="formData.email" type="email" class="form-control" name="email" id="email" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Password*</label>
+          <input v-model="formData.password" type="password" class="form-control" name="password" id="password" minlength="6" maxlength="10" required>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Name*</label>
+          <input v-model="formData.name" type="text" class="form-control" name="name" id="name" placeholder="Jon Doe" required>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Date Of Birth*</label>
+          <input v-model="formData.dob" type="date" class="form-control" name="dob" id="dob" max="c" required>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Address</label>
+          <input v-model="formData.address1" type="text" class="form-control" name="address1" id="address1" placeholder="1234 Main St">
+        </div>
+        <div class="col-12">
+          <label class="form-label">Address 2</label>
+          <input v-model="formData.address2" type="text" class="form-control" name="address2" id="address2" placeholder="Apartment, studio, or floor">
+        </div>
+        <div class="col-12">
+          <label class="form-label">City</label>
+          <input v-model="formData.city" type="text" class="form-control" name="city" id="city" placeholder="Siliguri">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">State</label>
+          <input v-model="formData.state" type="text" class="form-control" name="state" id="state" placeholder="West Bengal">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">PinCode</label>
+          <input v-model="formData.pin" type="number" class="form-control" name="pin" id="pin" placeholder="110001" maxlength="6" minlength="6">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Phone Number (+91)*</label>
+          <input v-model="formData.phone" type="number" class="form-control" name="phone" id="phone" min='6000000000' max='9999999999'required >
+        </div>
+        <div class="col-12">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="gridCheck" required>
+            <label class="form-check-label" for="gridCheck">
+              I agree with the terms & condition of EventVisa
+            </label>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="col d-flex justify-content-center">
+            <div class="button"></div>
+            <button type="submit" class="btn btn-primary" >Sign Up</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+
+   <script src="https://cdn.jsdelivr.net/npm/vue@2.7.14/dist/vue.js"></script>
+
+  <script>
+    var signup = new Vue({
+      el: "#signup",
+      delimiters: ["${", "}"],
+      data() {
+        return {
+          formData: {
+            email: '',
+            password: '',
+            name: '',
+            dob: '',
+            address1: '',
+            address2: '',
+            city: '',
+            state: '',
+            pin: '',
+            phone: '',
+          },
+          errorMessage: '',
+          successMessage: '',
+        };
+      },
+      methods: {
+        submitForm() {
+          const formData = this.formData;
+
+          // Use the Fetch API to perform the HTTP POST request
+          fetch('/signup.html', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              
+          },
+                      body: JSON.stringify(formData),
+        })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                document.cookie = "eventvisa_token="+data.token+"; path=/;";
+                
+                alert(data.message); // Set success message
+                this.errorMessage = ''; // Clear any previous error message
+                // You can redirect the user to another page after successful sign-up
+                window.location.href = '/home.html';
+              } else {
+                this.errorMessage = "Sign Up Failed: " + data.message; // Set error message
+                this.successMessage = ''; // Clear any previous success message
+              }
+            })
+            .catch(error => {
+              this.errorMessage = "An error occurred during sign-up: " + error.message; // Set error message
+              this.successMessage = ''; // Clear any previous success message
+            });
+        },
+      },
+    });
+  </script>
+
+
+{% endblock %}

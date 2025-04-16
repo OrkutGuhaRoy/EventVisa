@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{%block title%}Admin Login{%endblock%}
+{% block content %}
+
+
+
+<div id="admin_signin">
+  <p v-if="error" class="text-danger">${ error }</p>
+
+  <div id='check'></div>
+<div class="card text-center">
+  <h1 class="card-header"><center><bold>Hello Admin! Authenticate Yourself</bold></center></h1>
+  <div class="card-body">
+    <p class="card-text"> 
+
+  <form @submit.prevent="signIn" method="post">
+  <div class="mb-3">
+    <label  class="form-label">User Name</label>
+    <input v-model="formData.user" type="text" class="form-control" name="user"  required>
+  </div>
+  <div class="mb-3">
+    <label for="exampleInputPassword1" class="form-label">Password</label>
+    <input v-model="formData.password" type="password" class="form-control" name="password" required>
+  </div>
+  <button type="submit" class="btn btn-primary">Submit</button>
+      </form>
+  </div>
+</div>
+</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.7.14/dist/vue.js"></script>
+
+
+<script>
+var admin_signin = new Vue({
+      el: "#admin_signin",
+      delimiters: ["${", "}"],
+      data() {
+        return {
+          formData: {
+            user: '',
+            password: '',
+          },
+          error: '',
+        };
+      },
+      methods: {
+        signIn() {
+          const formData = this.formData;
+
+          // Use the Fetch API to perform the HTTP POST request
+          fetch('/admin_login.html', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData),
+          })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                document.cookie = `eventvisa_token=${data.token}; path=/;`;
+                alert(data.message)
+            
+                window.location.href = '/admin_landing.html'; 
+              } 
+              else {
+                this.error = "Sign In Failed: " + data.message; // Set error message
+                  }
+            })
+            .catch(error => {
+              this.error = "An error occurred during sign-in: " + error.message; // Set error message
+              
+            });
+        },
+      },
+    });
+</script>
+
+
+  <script>
+ 
+  var check = new Vue({
+    el: "#check",
+    delimiters: ["${", "}"],
+    data() {
+      return {
+        token: '', // Initialize the token variable
+        loggedIn: false,
+      };
+    },
+    mounted() {
+      // Fetch the user's name from cookies or session when the component is mounted
+      const cookies = document.cookie.split(';');
+      for (const cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'eventvisa_token') {
+          // Token found, fetch the user's role
+          this.loggedIn= true;
+          this.token=value;
+          fetch('/get_role', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ token: value }),
+          })
+          .then(response => response.json())
+          .then(data => {
+             if (data.role === "admin") {
+              window.location.href = "/admin_landing.html";
+            } 
+            if (data.error)
+            {
+              alert (data.error)
+              
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+          break;
+        }
+      }
+      
+    },
+  });
+</script>
+  {% endblock %}  

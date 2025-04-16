@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+{%block title%}Movies {%endblock%}
+{% block content %}
+<body>
+
+<div id='check'></div>
+<div id="movies" class="container mt-4">
+  <h1 class="text-center mb-4">Book Movies Now!</h1>
+
+  <div class="row">
+    <div class="col-md-6 offset-md-3">
+      <!-- Filter search input -->
+      <div class="mb-3">
+        <label for="filter" class="form-label">Filter:</label>
+        <input type="text" v-model="filter" @input="applyFilter" id="filter" class="form-control"
+          placeholder="Search for theater or movie">
+      </div>
+    </div>
+  </div>
+
+  <!-- List of theaters and their movies -->
+  <div v-for="theater in filteredTheaters" :key="theater.theater_id" v-if="theater.movies.length > 0"
+    class="card mb-12">
+    <div class="card-body">
+      <h2 class="card-title">${theater.name}-${theater.address}</h2>
+      <div v-for="movieGroup in theater.movieGroups" :key="movieGroup.name">
+        <h3 class="card-subtitle mb-2 text-muted">${movieGroup.name}</h3>
+        <div v-for="movieShow in movieGroup.shows" :key="movieShow.show_id">
+          <p class="card-text">Rating: ${movieShow.rating}</p>
+          <p class="card-text">Show Time: ${movieShow.show_time}</p>
+          <p class="card-text">VIP Tickets Available: ${movieShow.available_vip_tickets}</p>
+           <p class="card-text">Elite Tickets Available: ${ movieShow.available_elite_tickets}</p>
+          <p class="card-text">General Tickets Available: ${ movieShow.available_general_tickets}</p>
+           
+          <p class="card-text">Price per VIP Ticket: ${movieShow.price_per_vip_ticket}</p>
+          <p class="card-text">Price per Elite Ticket: ${movieShow.price_per_elite_ticket}</p>
+          <p class="card-text">Price per General Ticket: ${movieShow.price_per_general_ticket}</p>
+       
+           <div class="card p-3 text-right">
+          
+        <form >
+          
+        <div class="mb-3">
+        <label for="vipSeats">VIP Seats:</label>
+       <input type="number" v-model="vipSeats" id="vipSeats" class="form-control" min="0" :max="movieShow.available_vip_tickets">
+      </div>
+      <div class="mb-3">
+        <label for="eliteSeats">Elite Seats:</label>
+        <input type="number" v-model="eliteSeats" id="eliteSeats" class="form-control" min=0 :max="movieShow.available_elite_tickets">
+      </div>
+      <div class="mb-3">
+        <label for="generalSeats">General Seats:</label>
+        <input type="number" v-model="generalSeats" id="generalSeats" class="form-control" min=0 :max="movieShow.available_general_tickets">
+      </div>
+
+    <button @click="bookTicket(movieShow)" class="btn btn-primary">Book Ticket</button>
+
+         
+
+      </form>
+         <hr class="col-md-12">
+             
+        </div>
+      </div>
+    </div>
+  </div>
+  <div v-if="filteredTheaters.length === 0" class="alert alert-info">No theaters found.</div>
+
+  <!-- Booking Modal -->
+  
+      </div>
+    </div>
+  </div>
+</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+  <script>
+    new Vue({
+      el: "#movies",
+      delimiters: ["${", "}"],
+      data: {
+        theaters: [], // List of all theaters and their movies
+        filter: "", 
+        vipSeats: 0, // Initialize these properties
+       eliteSeats: 0,
+       generalSeats: 0,
+       email:''
+      },
+      mounted() {
+        // Fetch data from the backend when the component is mounted
+        
+        this.fetchTheatersAndMovies();
+      },
+      methods: {
+        fetchTheatersAndMovies() {
+          // Fetch theaters and their movies from the backend API
+          fetch("/get_theaters_with_movies_and_shows", { method: "POST" })
+            .then(response => {
+              // Check if the response is valid JSON or 'None'
+              if (!response.ok) {
+                throw new Error("Failed to fetch theaters and movies");
+              }
+              return response.json();
+            })
+            .then(data => {
+              if (data.success) {
+                this.theaters = data.theaters;
+              } else {
+                console.error("Failed to fetch theaters and movies:", data.error);
+              }
+            })
+            .catch(error => console.error("Error fetching data:", error));
+        },
+        applyFilter() {
+          // Filter the theaters and movies based on user input
+          const keyword = this.filter.toLowerCase().trim();
+          if (!keyword) {
+            // If the filter is empty, show all theaters and movies
+            return this.theaters;
+          } else {
+            // Otherwise, filter the theaters and their movies
+            return this.theaters.filter(theater => {
+              // Check if the theater name matches the keyword
+              if (theater.name.toLowerCase().includes(keyword)) {
+                return true;
+              }
+              // Check if any movie name in the theater matches the keyword
+              return theater.movies.some(movie => movie.movie_name.toLowerCase().includes(keyword));
+            });
+          }
+        },
+        bookTicket(movieShow) {
+              
+            const requestData = {
+            email:check.email,
+            showId: movieShow.show_id,
+            vipSeats:this.vipSeats,
+            eliteSeats: this.eliteSeats,
+            generalSeats: this.generalSeats
+          };
+        
+          fetch("/book_ticket", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(requestData)
+          })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                alert(data.message);
+                window.location.href =  "/user_dashboard.html";
+              } 
+              else
+              {
+                alert(data.message)
+              }
+            })
+            .catch(error => {
+              alert(data.message);
+              
+            });
+          }
+      },
+      computed: {
+        filteredTheaters() {
+          // Get the filtered list of theaters and their movies
+          const keyword = this.filter.toLowerCase().trim();
+          if (!keyword) {
+            // If the filter is empty, show all theaters and movies
+            return this.theaters.map(theater => ({
+              ...theater,
+              movieGroups: theater.movies.reduce((groups, movie) => {
+                if (!groups[movie.movie_name]) {
+                  groups[movie.movie_name] = {
+                    name: movie.movie_name,
+                    shows: []
+                  };
+                }
+                groups[movie.movie_name].shows.push(movie);
+                return groups;
+              }, {})
+            }));
+          } else {
+            // Otherwise, filter the theaters and their movies
+            return this.theaters.map(theater => ({
+              ...theater,
+              movieGroups: theater.movies.reduce((groups, movie) => {
+                if (theater.name.toLowerCase().includes(keyword) || movie.movie_name.toLowerCase().includes(keyword)) {
+                  if (!groups[movie.movie_name]) {
+                    groups[movie.movie_name] = {
+                      name: movie.movie_name,
+                      shows: []
+                    };
+                  }
+                  groups[movie.movie_name].shows.push(movie);
+                }
+                return groups;
+              }, {})
+            }));
+          }
+        }
+      }
+    });
+  </script>
+
+<script>
+ 
+  var check = new Vue({
+    el: "#check",
+    delimiters: ["${", "}"],
+    data() {
+      return {
+        token: '', // Initialize the token variable
+        loggedIn: false,
+        email: '',
+      };
+    },
+    mounted() {
+      // Fetch the user's name from cookies or session when the component is mounted
+      const cookies = document.cookie.split(';');
+      for (const cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'eventvisa_token') {
+          // Token found, fetch the user's role
+          this.loggedIn= true;
+          this.token=value;
+          fetch('/get_role', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ token: value }),
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.error)
+            {
+              alert (data.error)
+              window.location.href =  "/signin.html";
+            }
+            else
+            {
+               check.email = data.email;
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+          break;
+        }
+      }
+       if (!this.loggedIn) {
+        alert("Login For Exciting Movies & Offers");
+        window.location.href = "/signin.html"; // Redirect to login page or appropriate URL
+      }
+    },
+  });
+</script>
+
+
+{%endblock%}

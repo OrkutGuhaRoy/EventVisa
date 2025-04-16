@@ -1,0 +1,619 @@
+{% extends "base.html" %}
+{%block title%}Movies Management{%endblock%}
+{% block content %}
+
+<div id=check></div>
+
+<div id="add_teathre" class="container mt-5">
+    <h5>Add Theatre:</h5>
+    <form @submit.prevent="addTheatre">
+      <!-- Form fields for adding theater -->
+      <label class="form-label">Theatre Name:</label>
+      <input type="text" class="form-control" v-model="theatre.name" placeholder="OAT" required>
+
+      <label class="form-label">Theatre Address:</label>
+      <input type="text" class="form-control" v-model="theatre.address" placeholder="IIT Madras" required>
+
+      <label class="form-label">Available Seat In VIP:</label>
+      <input type="number" class="form-control" v-model="theatre.availableVIPSeats" placeholder="50">
+
+      <label class="form-label">Available Seat In Elite:</label>
+      <input type="number" class="form-control" v-model="theatre.availableEliteSeats" placeholder="80">
+
+      <label class="form-label">Available Seat In General:</label>
+      <input type="number" class="form-control" v-model="theatre.availableGeneralSeats" placeholder="100">
+
+      <br>
+      <div class="col d-flex justify-content-center">
+        <button type="submit" class="btn btn-primary">Submit</button>
+      </div>
+    </form>
+  </div>
+
+
+
+ <div id="add_movie" class="container mt-5">
+    <!-- Add Movie Form -->
+    <h5>Add Movie:</h5>
+    <form @submit.prevent="addMovie">
+      <label class="form-label">Movie Name:</label>
+      <input type="text" class="form-control" v-model="movie.name" required>
+
+      <label class="form-label">Rating:</label>
+      <select class="form-control" v-model="movie.rating" required>
+        <option value="U">U</option>
+        <option value="UA">UA</option>
+        <option value="A">A</option>
+        <option value="S">S</option>
+      </select>
+      <br>
+            <div class="col d-flex justify-content-center">
+        <button type="submit" class="btn btn-primary">Add Movie</button>
+      </div>
+    </form>
+
+    <!-- Add Show Form -->
+    <h5 class="mt-5">Add Show:</h5>
+    <form @submit.prevent="addShow">
+      <label class="form-label">Movie:</label>
+      <select class="form-control" v-model="show.movie_id" required>
+        <option v-for="movie in movies" :key="movie.movie_id" :value="movie.movie_id">${ movie.name }</option>
+      </select>
+
+      <label class="form-label">Theater:</label>
+<select class="form-control" v-model="show.theater_id" required>
+  <option v-for="theater in theaters" :key="theater.id" :value="theater.id">${theater.name} - ${theater.address}</option>
+</select>
+
+      <label class="form-label">Show Time:</label>
+      <input type="datetime-local" class="form-control" v-model="show.show_time" required>
+
+      <label class="form-label">Available VIP Tickets:</label>
+      <input type="number" class="form-control" v-model="show.available_vip_tickets" required>
+
+      <label class="form-label">Available Elite Tickets:</label>
+      <input type="number" class="form-control" v-model="show.available_elite_tickets" min=0  required>
+
+      <label class="form-label">Available General Tickets:</label>
+      <input type="number" class="form-control" v-model="show.available_general_tickets" min=0 required>
+
+      <label class="form-label">Price per VIP Ticket:</label>
+      <input type="number" class="form-control" v-model="show.price_per_vip_ticket" min=0 required>
+
+      <label class="form-label">Price per Elite Ticket:</label>
+      <input type="number" class="form-control" v-model="show.price_per_elite_ticket" min=0 required>
+
+      <label class="form-label">Price per General Ticket:</label>
+      <input type="number" class="form-control" v-model="show.price_per_general_ticket" min=0 required>
+
+      <br>
+      
+      <div class="col d-flex justify-content-center">
+        <button type="submit" class="btn btn-primary">Add Show</button>
+      </div>   
+    </form>
+  </div>
+
+<div id =uordmovie class="container mt-5">
+<h5 class="mt-5">Update or Delete Movie Details:</h5>
+<form @submit.prevent="updateOrDeleteMovie">
+  <label class="form-label">Select Movie:</label>
+  <select class="form-control" v-model="selectedMovieId" required>
+    <option v-for="movie in movies" :key="movie.movie_id" :value="movie.movie_id">${ movie.name }</option>
+  </select>
+
+  <label class="form-label">Movie Name:</label>
+  <input type="text" class="form-control" v-model="updatedMovie.name" required>
+
+  <label class="form-label">Rating:</label>
+  <select class="form-control" v-model="updatedMovie.rating" required>
+    <option value="U">U</option>
+    <option value="UA">UA</option>
+    <option value="A">A</option>
+    <option value="S">S</option>
+  </select>
+
+  <br>
+      
+      <div class="col d-flex justify-content-center">
+       
+
+  <button type="submit" class="btn btn-primary mt-3">Update Movie</button>       
+  <button type="button" class="btn btn-danger mt-3" @click="deleteMovie">Delete Movie</button>
+              </div>
+</form>
+</div>
+
+<div id="app" class="container mt-5">
+  <h5 class="mt-5">Update or Delete Theater Details:</h5>
+  <form @submit.prevent="updateOrDeleteTheater">
+    <label   class="form-label" >Select Theater:</label>
+    <select class="form-control"  v-model="selectedTheaterId">
+      <option  v-for="theater in theaters" :key="theater.theater_id" :value="theater.id">${ theater.name } - ${ theater.address }</option>
+    </select>
+
+    <!-- Checkbox for update -->
+    <div class="form-check">
+      <input type="checkbox" class="form-check-input" id="updateCheckbox" v-model="isUpdating">
+      <label class="form-check-label" for="updateCheckbox">Update Theater</label>
+    </div>
+
+    <!-- Checkbox for delete -->
+    <div class="form-check">
+      <input type="checkbox" class="form-check-input" id="deleteCheckbox" v-model="isDeleting">
+      <label class="form-check-label" for="deleteCheckbox">Delete Theater</label>
+    </div>
+
+    <!-- Add other input fields for updating theater details -->
+    <label class="form-label">Theater Name:</label>
+    <input type="text" class="form-control" v-model="selectedTheater.name" :disabled="!isUpdating" required>
+
+    <label class="form-label">Theater Address:</label>
+    <input type="text" class="form-control" v-model="selectedTheater.address" :disabled="!isUpdating" required>
+
+    <label class="form-label">Available Seat In VIP:</label>
+    <input type="number" class="form-control" v-model="selectedTheater.availableVIPSeats" :disabled="!isUpdating" required>
+
+    <label class="form-label">Available Seat In Elite:</label>
+    <input type="number" class="form-control" v-model="selectedTheater.availableEliteSeats" :disabled="!isUpdating" required>
+
+    <label class="form-label">Available Seat In General:</label>
+    <input type="number" class="form-control" v-model="selectedTheater.availableGeneralSeats" :disabled="!isUpdating" required>
+
+    <br>
+    <div class="col d-flex justify-content-center">
+      <button type="submit" class="btn btn-primary" v-if="isUpdating" @click="updateOrDeleteTheater">Update Theater</button>
+      <button type="button" class="btn btn-danger" v-if="isDeleting" @click="updateOrDeleteTheater">Delete Theater</button>
+    </div>
+  </form>
+</div>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+
+<script>
+ 
+  var check = new Vue({
+    el: "#check",
+    delimiters: ["${", "}"],
+    data() {
+      return {
+        token: '', // Initialize the token variable
+        loggedIn: false,
+      };
+    },
+    mounted() {
+      // Fetch the user's name from cookies or session when the component is mounted
+      const cookies = document.cookie.split(';');
+      for (const cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'eventvisa_token') {
+          // Token found, fetch the user's role
+          this.loggedIn= true;
+          this.token=value;
+          fetch('/get_role', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ token: value }),
+          })
+          .then(response => response.json())
+          .then(data => {
+             if (data.role === "client") {
+              alert("Unauthorized");
+              window.location.href = "/home.html";
+            } 
+            if (data.error)
+            {
+              alert (data.error)
+              window.location.href =  "/admin_login.html";
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+          break;
+        }
+      }
+       if (!this.loggedIn) {
+        alert("Access Denied");
+        window.location.href = "/admin_login.html"; // Redirect to login page or appropriate URL
+      }
+    },
+  });
+</script>
+
+
+<script>
+  var add_teathre = new Vue({
+      el: "#add_teathre",
+      data() {
+        return {
+          theatre: {
+            name: "",
+            address: "",
+            availableVIPSeats: null,
+            availableEliteSeats: null,
+            availableGeneralSeats: null,
+          },
+        };
+      },
+      methods: {
+        addTheatre() {
+          // Check if VIP, Elite, and General seats are null, then set to 0
+          if (!this.theatre.availableVIPSeats) {
+            this.theatre.availableVIPSeats = 0;
+          }
+          if (!this.theatre.availableEliteSeats) {
+            this.theatre.availableEliteSeats = 0;
+          }
+          if (!this.theatre.availableGeneralSeats) {
+            this.theatre.availableGeneralSeats = 0;
+          }
+
+          fetch("/add_theater", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(this.theatre),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.success) {
+                alert("Successfully Added " + this.theatre.name + " with ID: " + data.theater_id);
+                this.theatre = {
+                  name: "",
+                  address: "",
+                  availableVIPSeats: null,
+                  availableEliteSeats: null,
+                  availableGeneralSeats: null,
+                };
+              } else {
+                alert("Error: " + data.message);
+              }
+            })
+            .catch((error) => {
+              alert("Error: " + error);
+            });
+        },
+      },
+    });
+  </script>
+
+
+
+<script>
+var add_movie = new Vue({
+  el: "#add_movie",
+  delimiters: ["${", "}"],
+  data() {
+    return {
+      movie: {
+        name: "",
+        rating: "U"
+      },
+      show: {
+        movie_id: null,
+        theater_id: null,
+        show_time: null,
+        available_vip_tickets: null,
+        available_elite_tickets: null,
+        available_general_tickets: null,
+        price_per_vip_ticket: null,
+        price_per_elite_ticket: null,
+        price_per_general_ticket: null
+      },
+      movies: [],
+      theaters: [],
+      shows: []
+    };
+  },
+  methods: {
+    addMovie() {
+      fetch("/add_movie", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(this.movie)
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert("Movie added successfully!");
+            this.movies.push({
+              movie_id: this.movies.length + 1,
+              name: this.movie.name,
+              rating: this.movie.rating
+            });
+            this.movie.name = "";
+            this.movie.rating = "U";
+          } else {
+            alert("Error: " + data.message);
+          }
+        })
+        .catch(error => {
+          alert("Error: " + error);
+        });
+    },
+    addShow() {
+      fetch("/add_show", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(this.show)
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert("Show added successfully!");
+            this.shows.push({
+              show_id: this.shows.length + 1,
+              movie_id: this.show.movie_id,
+              theater_id: this.show.theater_id,
+              show_time: this.show.show_time,
+              available_vip_tickets: this.show.available_vip_tickets,
+              available_elite_tickets: this.show.available_elite_tickets,
+              available_general_tickets: this.show.available_general_tickets,
+              price_per_vip_ticket: this.show.price_per_vip_ticket,
+              price_per_elite_ticket: this.show.price_per_elite_ticket,
+              price_per_general_ticket: this.show.price_per_general_ticket
+            });
+            this.show.movie_id = null;
+            this.show.theater_id = null;
+            this.show.show_time = null;
+            this.show.available_vip_tickets = null;
+            this.show.available_elite_tickets = null;
+            this.show.available_general_tickets = null;
+            this.show.price_per_vip_ticket = null;
+            this.show.price_per_elite_ticket = null;
+            this.show.price_per_general_ticket = null;
+          } else {
+            alert("Error: " + data.message);
+          }
+        })
+        .catch(error => {
+          alert("Error: " + error);
+        });
+    }
+  },
+  mounted() {
+    // Fetch available movies from the backend
+    fetch("/get_movies",
+    {
+       method: "POST"
+         })
+      .then(response => response.json())
+      .then(data => {
+        this.movies = data.movies;
+      })
+      .catch(error => {
+        alert("Error: " + error);
+      });
+
+    // Fetch available theaters from the backend
+    fetch("/get_theaters",
+    {
+       method: "POST"
+         })
+      .then(response => response.json())
+      .then(data => {
+        this.theaters = data.theaters;
+      })
+      .catch(error => {
+        alert("Error: " + error);
+      });
+  }
+});
+</script> 
+
+<script>
+var uordmovie = new Vue({
+  el: "#uordmovie",
+  delimiters: ["${", "}"],
+  data() {
+    return {
+      selectedMovieId: null,
+      updatedMovie: {
+        name: "",
+        rating: ""
+      },
+      movies: [] // Populate this with available movies from the backend
+    };
+  },
+  methods: {
+    updateOrDeleteMovie() {
+      if (!this.selectedMovieId) {
+        alert("Please select a movie.");
+        return;
+      }
+
+      // Send a POST request to update the movie details
+      fetch("/update_movie", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          movie_id: this.selectedMovieId,
+          name: this.updatedMovie.name,
+          rating: this.updatedMovie.rating
+        })
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert("Movie details updated successfully!");
+            // Update the movies list with the updated movie details
+            const index = this.movies.findIndex(movie => movie.movie_id === this.selectedMovieId);
+            if (index !== -1) {
+              this.movies[index].name = this.updatedMovie.name;
+              this.movies[index].rating = this.updatedMovie.rating;
+            }
+            // Reset the form fields
+            this.selectedMovieId = null;
+            this.updatedMovie.name = "";
+            this.updatedMovie.rating = "";
+          } else {
+            alert("Error: " + data.message);
+          }
+        })
+        .catch(error => {
+          alert("Error: " + error);
+        });
+    },
+    deleteMovie() {
+      if (!this.selectedMovieId) {
+        alert("Please select a movie.");
+        return;
+      }
+
+      // Send a DELETE request to delete the movie
+      fetch(`/delete_movie/${this.selectedMovieId}`, {
+        method: "DELETE"
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert("Movie deleted successfully!");
+            // Remove the movie from the movies list
+            this.movies = this.movies.filter(movie => movie.movie_id !== this.selectedMovieId);
+            // Reset the form fields
+            this.selectedMovieId = null;
+            this.updatedMovie.name = "";
+            this.updatedMovie.rating = "";
+          } else {
+            alert("Error: " + data.message);
+          }
+        })
+        .catch(error => {
+          alert("Error: " + error);
+        });
+    }
+  },
+  mounted() {
+    // Fetch available movies from the backend
+    fetch("/get_movies", {
+        method: "POST"
+      })
+      .then(response => response.json())
+      .then(data => {
+        this.movies = data.movies;
+      })
+      .catch(error => {
+        alert("Error: " + error);
+      });
+  }
+});
+
+</script>
+
+<script>
+  var app = new Vue({
+    el: "#app",
+    delimiters: ["${", "}"],
+    data() {
+      return {
+        selectedTheater: {}, // This is the only 'selectedTheater' data property now
+        selectedTheaterId: null,
+        theaters: [],
+        isUpdating: false,
+        isDeleting: false
+      };
+    },
+    computed: {
+      isUpdateOrDeleteChecked() {
+        return this.isUpdating || this.isDeleting;
+      }
+    },
+    methods: {
+      updateOrDeleteTheater() {
+        console.log("selectedTheaterId:", this.selectedTheaterId);
+        console.log("selectedTheater:", this.selectedTheater);
+        if (!this.selectedTheaterId) {
+          alert("Please select a theater.");
+          return;
+        }
+        if (this.isUpdating) {
+          // Handle updating theater details
+          fetch(`/update_theater/${this.selectedTheaterId}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(this.selectedTheater)
+          })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                alert("Theater details updated successfully!");
+                // Update the theaters list with the updated theater details
+                const index = this.theaters.findIndex(
+                  theater => theater.theater_id === this.selectedTheaterId
+                );
+                if (index !== -1) {
+                  this.theaters[index] = { ...this.selectedTheater };
+                }
+                // Reset the form fields
+                this.selectedTheaterId = null;
+                this.selectedTheater = {};
+              } else {
+                alert("Error: " + data.message);
+              }
+            })
+            .catch(error => {
+              alert("Error: " + error);
+            });
+        } else if (this.isDeleting) {
+          // Handle deleting theater
+          fetch(`/delete_theater/${this.selectedTheaterId}`, {
+            method: "DELETE"
+          })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                alert("Theater deleted successfully!");
+                // Remove the deleted theater from the theaters array
+                this.theaters = this.theaters.filter(
+                  theater => theater.theater_id !== this.selectedTheaterId
+                );
+                // Reset the form fields
+                this.selectedTheaterId = null;
+                this.selectedTheater = {};
+              } else {
+                alert("Error: " + data.message);
+              }
+            })
+            .catch(error => {
+              alert("Error: " + error);
+            });
+        }
+        // Reset checkboxes after submission
+        this.isUpdating = false;
+        this.isDeleting = false;
+      }
+    },
+  
+    mounted() {
+      // Fetch available theaters from the backend
+      fetch("/get_theaters", {
+        method: "POST"
+      })
+        .then(response => response.json())
+        .then(data => {
+          this.theaters = data.theaters;
+        })
+        .catch(error => {
+          alert("Error: " + error);
+        });
+    }
+  });
+</script>
+
+
+
+{%endblock%}
